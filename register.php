@@ -8,7 +8,7 @@ if (isset($_POST['username']) && isset($_POST['password'])){
     $email = $_POST['email'];
     $password = $_POST['password'];
 
-    $query = "INSERT INTO db_user.user (username, password, email) VALUES ('$username', '$password', '$email')";
+    $query = "INSERT INTO users (username, password, email) VALUES ('$username', '$password', '$email')";
     $result = mysqli_query($connection, $query);
     if($result){
         $smsg = "User created successfully.";

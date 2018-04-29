@@ -12,9 +12,11 @@ require('api_keys.php');
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.0.8/js/all.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.16/r-2.2.1/datatables.min.js"></script>
 
     <link rel="stylesheet" type="text/css" href="style_main.css">
     <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.16/r-2.2.1/datatables.min.css"/>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 
 </head>
@@ -57,63 +59,49 @@ require('api_keys.php');
             <input id="search" width="auto">
             <a id="adding" href="#" style="display: none"><i class="fas fa-plus-circle"></i> add to favorites</a>
         </div>
-        <div id="favmovies_new" style="display: none;"><b>New Favorites</b></div>
+        <div id="favmovies_new" style="display: none;"><h3>New Favorites</h3></div>
         <button id="save" style="display: none;"><i class="fas fa-save"></i> save to favorites</button>
         <p id="results" style="margin-top:1em;color: #9d1206"></p>
-        <h3>Favorites</h3>
-            <div id="favmovies"></div>
+        <h3>Current Favorites</h3>
+            <div id="favmovies">
+                <table id="movieTable" class="table table-hover table-sm table-responsive-lg">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Year</th>
+                        <th>Genres</th>
+                        <th>Rating</th>
+                        <th>Favorite</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
     </div>
 </div>
+
 <script>
     $(document).ready(function(){
 
-        var favs = [];
-        $("#favmovies").html('loading favorites ...');
-
-        $.ajax({
-            type: "GET",
-            url: "get_fav.php",
-            dataType: 'JSON',
-            success: function(data) {
-                $("#favmovies").empty();
-                console.log(data);
-                /*
-                $(data).each(function () {
-                    var str = "<div class='imgHover' id='" + this.movieId + "' style='display:inline-grid;position:relative;padding:1em;'>" +
-                        "<div class='hover' style='display:none;position:absolute;z-index:2;top:4em;left:4em;'>" +
-                        "<a class='open'    style='color:black' href='movie.php?id="+ this.movieId + "'><i class=\"fas fa-external-link-alt\"></i> Open</a><BR><BR>" +
-                        "<a class='remove'  style='color:black' href='#'><i class=\"fas fa-trash\"></i> Remove</a></div>" +
-                        "<img src='" + this.tmdbId + "'></div>";
-                    $("#favmovies").append(str);
-                });
-                */
-
-                $(".imgHover").hover(
-                    function() {
-                        $(this).children("img").fadeTo(200, 0.1).end().children(".hover").show();
-                    },
-                    function() {
-                        $(this).children("img").fadeTo(200, 1).end().children(".hover").hide();
-                    });
-
-                $(".hover .remove").click(function(){
-                    var fav = $(this).parent().parent().attr('id');
-                    $.ajax({
-                        type: "POST",
-                        url: "remove_fav.php",
-                        data: {fav:fav},
-                        dataType: "JSON",
-                        success: function(data) {
-                            $("#results").html(data);
-                            $('#'+fav).remove();
-                        },
-                        error: function(err) {
-                            $("#results").html(data);
-                        }
-                    });
-                });
-            }
+        //$("#favmovies").html('loading favorites ...');
+        var table = $('#movieTable').DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: "fav_table.php"
         });
+
+        $('#movieTable tbody').on('click', 'tr', function () {
+            var data = table.row(this).data();
+            window.location.href = "movie.php?id=" + data[0];
+        });
+
+        $('#movieTable tbody tr').hover(function () {
+            $(this).css("cursor","pointer");
+        });
+
+        var favs = [];
 
         $("#search").autocomplete({
             source: 'search.php'

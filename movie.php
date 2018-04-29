@@ -24,7 +24,7 @@ function curly($url) {
 }
 
 // get tmdbId for movieDB queries
-$sql = "SELECT tmdbId, imdbId FROM db_recomm.movies WHERE movieId=".$movieid;
+$sql = "SELECT tmdbId, imdbId FROM movies WHERE movieId=".$movieid;
 $result = trim(mysqli_fetch_assoc(mysqli_query($connection, $sql))["tmdbId"]);
 $idmb_id_2 = trim(mysqli_fetch_assoc(mysqli_query($connection, $sql))["imdbId"]);
 
@@ -116,14 +116,14 @@ if($trailer == ""){
 }
 
 // update row in table with imdb_id
-$sql = "UPDATE db_recomm.movies
+$sql = "UPDATE movies
         SET title='".$title."', rating=". $rating. ", imdbId=".(int)substr($imdb_id,2).", year=". $release_date.", genres='". $genres."'
         WHERE movieId=".$movieid.";";
 $connection->query($sql);
 
 // check if movie is favorite
 $sql = "SELECT count(movieId) as n
-            FROM db_user.ratings as r
+            FROM ratings as r
             WHERE r.movieId = ". $movieid ."
             AND r.username = '". $username ."'";
 $fav = mysqli_fetch_assoc(mysqli_query($connection, $sql));
@@ -259,9 +259,6 @@ mysqli_close($connection);
                 }
             });
         });
-
-
-
     });
 </script>
 </body>

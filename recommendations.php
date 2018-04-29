@@ -5,21 +5,21 @@ require('connect.php');
 require('api_keys.php');
 
 
-function getMovieID($tmdbId,$title,$vote, $genres,$year){
+function getMovieID($tmdbId,$title,$vote,$year){
     // add movie if doesnt exists
-    $connection = mysqli_connect('localhost', 'root', 'x8C3wEqZd4DdoxwP');
 
-    $sql = "SELECT movieId FROM db_recomm.movies WHERE tmdbId = ". $tmdbId;
+    $sql = "SELECT movieId FROM movies WHERE tmdbId = ". $tmdbId;
     $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
     $result = $result["movieId"];
+    //console_log(strlen($result)===0);
 
-    if(strlen($result)===0 or $result["imdbId"]===0){
+    if(strlen($result)===0){
         // movie id's
         $imdbId = 0;
-        $sql1 = "INSERT INTO db_recomm.movies (title, imdbId, tmdbId, rating, genres, year)
-            VALUES ('". $title ."',". $imdbId .", ". $tmdbId .", ". $vote .", '". $genres."', ". $year .")";
+        $sql1 = "INSERT INTO movies (title, imdbId, tmdbId, rating, year)
+            VALUES ('". $title ."',". $imdbId .", ". $tmdbId .", ". $vote .", ". $year .")";
         if ($connection->query($sql1) === TRUE) {
-            $sql = "SELECT movieId FROM db_recomm.movies WHERE tmdbId = ". $tmdbId;
+            $sql = "SELECT movieId FROM movies WHERE tmdbId = ". $tmdbId;
             $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
             $result = $result["movieId"];
         } else {
@@ -27,7 +27,7 @@ function getMovieID($tmdbId,$title,$vote, $genres,$year){
             console_log(json_encode($sql1));
         }
     } else {
-        $sql_rating = "UPDATE db_recomm.movies SET rating=".$vote.", genres='" . $genres ."', WHERE movieId=".$result;
+        $sql_rating = "UPDATE movies SET rating=".$vote.", WHERE movieId=".$result;
         $connection->query($sql_rating);
     }
 
@@ -36,48 +36,50 @@ function getMovieID($tmdbId,$title,$vote, $genres,$year){
 }
 
 function check($id){
-    $connection = mysqli_connect('localhost', 'root', 'x8C3wEqZd4DdoxwP');
     $username = $_SESSION['username'];
     $sql = "SELECT count(m.tmdbId) as n
-            FROM db_recomm.movies as m, db_user.ratings as r 
+            FROM movies as m, ratings as r 
             WHERE m.movieId = r.movieId
-            AND m.tmdbId = ". $id ."
-            AND r.username = '". $username ."'";
+            AND r.username = '". $username ."'
+            AND m.tmdbId = ". $id ." ";
+
     $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
-    $result = $result["n"];
+    $result = (int)$result["n"];
     mysqli_close($connection);
     return $result;
 }
 
 // select 3 random movies and get recommendations
 for ($x = 1; $x <= 3; $x++) {
-    $connection = mysqli_connect('localhost', 'root', 'x8C3wEqZd4DdoxwP');
     $sql = "SELECT m.tmdbId, m.title, m.rating
-        FROM db_recomm.movies as m, db_user.ratings as r 
+        FROM movies as m, ratings as r 
         WHERE m.movieId = r.movieId
         AND r.username = '". $username ."' 
         ORDER BY RAND() LIMIT 1";
     $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
     $movieId = trim($result["tmdbId"]);
-
-    $url = "https://api.themoviedb.org/3/movie/". $movieId ."/recommendations?page=1&language=en-US&api_key=".$api_key;
-    $curl = curl_init();
-    curl_setopt_array($curl, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => "",
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 30,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => "GET",
-        CURLOPT_POSTFIELDS => "{}",
-    ));
-
-    $response = json_decode(curl_exec($curl));
-    $err = curl_error($curl);
-    curl_close($curl);
-    $data[$x] = $response->results;
     mysqli_close($connection);
+
+    if($movieId!=NULL){
+        $url = "https://api.themoviedb.org/3/movie/". $movieId ."/recommendations?page=1&language=en-US&api_key=".$api_key;
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "GET",
+            CURLOPT_POSTFIELDS => "{}",
+        ));
+        $response = json_decode(curl_exec($curl));
+        $err = curl_error($curl);
+        curl_close($curl);
+        $data[$x] = $response->results;
+    } else {
+        $data[$x] = [];
+    }
 }
 
 
@@ -90,7 +92,6 @@ foreach ($recomm as $r){
 }
 $tempArr = array_unique($tempArr);
 $recomm = array_intersect_key($recomm, $tempArr);
-
 
 ?>
 <!DOCTYPE html>
@@ -148,18 +149,20 @@ $recomm = array_intersect_key($recomm, $tempArr);
                 if ($err) {
                     console_log("cURL Error #:" . $err);
                 } else {
+                    //console_log($recomm);
+
                     foreach($recomm as $entry){
-                        if(check($entry->id) == 0){
-                            $genres = [];
-                            foreach ($entry->genres as $g){
-                                array_push($genres, $g->name);
-                            }
-                            $genres = implode("|", $genres);
+                        $id = (int)($entry->id);
+                        if(check($id) === 0){
                             $year = $entry->release_date;
                             $year = (int)substr($year,0,4);
                             $poster = "http://image.tmdb.org/t/p/w200/". $entry->poster_path;
+                            $vote = $entry->vote_average;
+                            $title = $entry->original_title;
 
-                            echo '<a href="movie.php?id='.getMovieID($entry->id, $entry->original_title, $entry->vote_average, $genres, $year) .'"><img style="margin:1em;" src="'. $poster .'"></a>';
+                            $t = getMovieID($id, $title, $vote, $year);
+                            //echo '<a href="movie.php?id='. getMovieID($id, $title, $vote, $year) .'"><img style="margin:1em;" src="'. $poster .'"></a>';
+                        
                         }
                     }
                 }

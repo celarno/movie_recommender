@@ -4,11 +4,10 @@ require('console_log.php');
 require('api_keys.php');
 require('connect.php');
 
-$sql = "SELECT * FROM db_user.user WHERE username='".$username."'";
+$sql = "SELECT * FROM users WHERE username='".$username."'";
 $result = mysqli_query($connection, $sql);
 $data = mysqli_fetch_assoc($result);
 mysqli_close($connection);
-
 
 ?>
 <!DOCTYPE html>

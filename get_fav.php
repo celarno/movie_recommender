@@ -5,7 +5,7 @@ require('connect.php');
 require('api_keys.php');
 
 $sql = "SELECT DISTINCT m.movieId, m.tmdbId
-        FROM db_user.ratings as r, db_recomm.movies as m
+        FROM ratings as r, movies as m
         WHERE r.username='".$username."'
         AND m.movieId = r.movieId
         ORDER BY r.rId ASC";

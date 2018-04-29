@@ -6,8 +6,8 @@ require('connect.php');
 $searchTerm = $_GET['term'];
 
 //get matched data from movie table
-$query = $connection->query("SELECT m.title FROM db_recomm.movies as m
-                                      LEFT OUTER JOIN db_user.ratings as r 
+$query = $connection->query("SELECT m.title FROM movies as m
+                                      LEFT OUTER JOIN ratings as r 
                                       ON m.movieId = r.movieId 
                                       AND r.username = '".$username."'
                                     WHERE r.rating IS NULL

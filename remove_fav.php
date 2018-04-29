@@ -1,9 +1,10 @@
 <?php
 session_start();
+require('connect.php');
+
 $username = $_SESSION['username'];
 $f = $_POST['fav'];
 
-$connection = mysqli_connect('localhost', 'root', 'x8C3wEqZd4DdoxwP','db_user');
 $sql = "DELETE FROM ratings WHERE username = '".$username."' AND movieId = ".$f;
 
 if ($connection->query($sql) === TRUE) {
