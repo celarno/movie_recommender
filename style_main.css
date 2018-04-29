@@ -1,0 +1,102 @@
+#main {
+    padding: 2em;
+    background: rgba(248, 249, 250, 0.8);
+    -webkit-box-shadow: 0px 0px 51px -6px rgba(0,0,0,0.22);
+    -moz-box-shadow:    0px 0px 51px -6px rgba(0,0,0,0.22);
+    box-shadow:         0px 0px 51px -6px rgba(0,0,0,0.22);
+}
+
+table, thead, tr, td {
+    border-spacing: 0;
+    border-collapse: collapse !important;
+    border: 0 transparent !important;
+    padding:0;
+    margin:0;
+}
+
+.container::before {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: -1;
+
+    display: block;
+    background: url("bg2.jpg");
+    width: 100%;
+    height: 100%;
+
+    filter: blur(7px) grayscale(50%) opacity(80%);
+    -webkit-filter: blur(7px) grayscale(50%) opacity(80%);
+    transform: scale(1.1);
+}
+
+.navbar-custom {
+    background: rgba(0, 123, 255, 0.9);
+    -webkit-box-shadow: 0px 13px 48px 0px rgba(0,0,0,0.15);
+    -moz-box-shadow:    0px 13px 48px 0px rgba(0,0,0,0.15);
+    box-shadow:         0px 13px 48px 0px rgba(0,0,0,0.15);
+}
+
+#movieTable > tbody > tr:hover {
+    cursor: pointer;
+}
+
+#main a:hover {
+    color: black !important;
+    text-decoration: none !important;
+}
+
+#main img, iframe {
+    -webkit-box-shadow: 0 0 10px 0 rgba(0,0,0,0.22);
+    -moz-box-shadow:    0 0 10px 0 rgba(0,0,0,0.22);
+    box-shadow:         0 0 10px 0 rgba(0,0,0,0.22);
+}
+
+#favmovies, .ui-widget {
+    padding: 1em;
+}
+
+.navbar-brand a {
+    color: white;
+}
+
+#movie_table td {
+    padding: 5px;
+    min-width: 9em;
+}
+
+#movie_table td:nth-child(1){
+    color: #4c4c4c;
+    font-weight: 100;
+}
+
+#movie_table td:nth-child(2) {
+
+}
+
+#main h2, #main h3 {
+    font-family: "Helvetica Neue", sans-serif;
+    font-weight: 200;
+}
+
+#movie_r {
+    min-width: 15em !important;
+    padding: 1em;
+    text-align: center;
+    vertical-align: top;
+}
+
+#movie_r a {
+    color:black;
+    font-size:small;
+}
+#movie_r li {
+    list-style: none;
+    padding-bottom: 3px;
+}
+
+
+#stars {
+    padding-top: 3px;
+}
