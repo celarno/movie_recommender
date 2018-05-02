@@ -206,7 +206,7 @@ mysqli_close($connection);
                 contentType: false,
                 processData: false,
                 success: function(response){
-                    if(response != 0){
+                    if(response !== 0){
                         $("#upload").hide();
                         $(".profile_pic").attr("src",response);
                         $('#preview').html("<p>Profile picture successfully uploaded.</p>");
