@@ -1,8 +1,13 @@
 <?php
 session_start();
+if (!isset($_SESSION['username'])){
+    header('Location: index.php');
+}
+
 require('console_log.php');
 require('api_keys.php');
 require('connect.php');
+require('user_picture.php');
 
 $movieid = $_GET['id'];
 
@@ -116,9 +121,10 @@ if($trailer == ""){
 }
 
 // update row in table with imdb_id
-$sql = "UPDATE movies
-        SET title='".$title."', rating=". $rating. ", imdbId=".(int)substr($imdb_id,2).", year=". $release_date.", genres='". $genres."'
-        WHERE movieId=".$movieid.";";
+$sql = 'UPDATE movies
+        SET title="'.$title.'", rating='. $rating. ', imdbId='.(int)substr($imdb_id,2).',
+        year='. $release_date.', genres="'. $genres.'", poster="'. $poster.'"
+        WHERE movieId='.$movieid;
 $connection->query($sql);
 
 // check if movie is favorite
@@ -169,9 +175,12 @@ mysqli_close($connection);
                     <li class="nav-item active">
                         <a class="nav-link" href="browse.php">Browse Movies</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin/admin_movies.php">Admin</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><span class="nav-link"><i class="fas fa-user-circle"></i> Welcome, <?php echo $username?></span></li>
+                    <li class="nav-item"><span class="nav-link"><img class="profile_pic" style="height:20px;width:20px;box-shadow:none;" src="<?php echo $p ?>">  Welcome, <?php echo $username?></span></li>
                     <li class="nav-item"><a class="nav-link" href='logout.php'><i class="fas fa-external-link-alt"></i> Logout</button></a></li>
                 </ul>
             </div>
@@ -184,18 +193,17 @@ mysqli_close($connection);
 
     if ($r !== "ERROR") {
 
-        echo '<h2>' . $title. '</h2><br>';
+        echo '<h2>' . $title. '</h2><h4 style="color:#979797;font-weight: 200"> ' . $release_date .'</h4>';
         echo '<table id="movie_table">';
-        echo '<tr><td><i class="fas fa-calendar-alt"></i><b> Release Year</b></td><td>' . $release_date. '</td>';
-        echo '<td rowspan=8 id="movie_r">
+        echo '<tr><td><i class="fas fa-book"></i><b> Plot</b></td><td>' . $plot . '</td>';
+        echo '<td rowspan=7 id="movie_r">
                 <img src="'. $poster .'"><br><br>
                 <li><a id="remove" style="display:none;" href="#"><i class="fas fa-trash"></i> Remove from favorites</a></li>
                 <li><a id="adding" style="display:none;" href="#"><i class="fas fa-plus-circle"></i> Add to favorites</a><div id="results"></div></li>
+                <li><a href="similar.php?id='. $result .'"><i class="fas fa-clone"></i> Similar movies</a></li>
                 <li><a target="_blank" href="'. $imdb_url .'"><i class="fab fa-imdb"></i> IMDB page</a></li>
                 <li><a id="stars" href="#">'. $stars .' ('.$rating.')</a></li>
                 </td></tr>';
-
-        echo '<tr><td><i class="fas fa-book"></i><b> Plot</b></td><td>' . $plot . '</td></tr>';
         echo '<tr><td><i class="fas fa-video"></i><b> Director(s)</b></td><td>' . implode(", ", $director) . '</td></tr>';
         echo '<tr><td><i class="fas fa-pencil-alt"></i><b> Writer(s)</b></td><td>' . implode(", ", $writer) . '</td></tr>';
         echo '<tr><td><i class="fas fa-users"></i><b> Cast</b></td><td>' . implode(", ",$cast) . '</td></tr>';

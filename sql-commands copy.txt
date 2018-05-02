@@ -1,58 +1,32 @@
 CREATE TABLE movies (
 	movieId	INT		NOT NULL	AUTO_INCREMENT,
-    	title	VARCHAR(255) 	NOT NULL,
+    title	VARCHAR(255) 	NOT NULL,
 	year	int,
-    	genres	VARCHAR(255),
+    genres	VARCHAR(255),
 	rating DECIMAL(2,1),
-	imdbId		INT	NOT NULL,
+	imdbId		INT,
 	tmdbId		INT	NOT NULL,
+	poster	VARCHAR(255),
 	PRIMARY KEY (movieId)
 );
 
-LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/output.csv' INTO TABLE movies 
+LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/movies_py.csv' INTO TABLE movies 
 FIELDS TERMINATED BY ';'
-OPTIONALLY ENCLOSED BY '"'
 LINES TERMINATED BY '\n'
 IGNORE 1 ROWS;
 
-
-
-
-LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/movies2.csv' INTO TABLE movies 
-FIELDS TERMINATED BY ';' 
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS;
 
 ---------------
 
 CREATE TABLE ratings (
-	rId	INT		NOT NULL	AUTO_INCREMENT,
-    	userId	INT	 	NOT NULL,
-	movieId INT 		NOT NULL,
-    	rating	NUMERIC(1,1) 	NOT NULL,
+	rId			INT					NOT NULL	AUTO_INCREMENT,
+    username	VARCHAR(255)	 	NOT NULL,
+	movieId 	INT 				NOT NULL,
+    rating		BOOLEAN,
 	PRIMARY KEY (rId),
-    	FOREIGN KEY (movieId) REFERENCES movies(movieId)
+	FOREIGN KEY (username) REFERENCES users(username), 
+    FOREIGN KEY (movieId) REFERENCES movies(movieId)
 );
-
-LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/ratings.csv'
-INTO TABLE ratings 
-FIELDS TERMINATED BY ',' 
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS
-(userId, movieId, rating);
-
-----------
-
-UPDATE movies AS m JOIN
-       (SELECT movieId, AVG(rating) AS avgscore
-        FROM ratings
-        GROUP BY movieId ) AS r
-	ON m.movieId = r.movieId
-SET m.rating = r.avgscore;
-
-----------
-
-DROP TABLE ratings;
 
 ----------
 
@@ -66,59 +40,7 @@ CREATE TABLE users (
   UNIQUE KEY username (username)
 );
 
-------------
-
-CREATE TABLE links (
-  	movieId 	INT	NOT NULL,
- 	imdbId		INT	NOT NULL,
-	tmdbId		INT	NOT NULL
-)
-
-LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/links.csv'
-INTO TABLE links 
-FIELDS TERMINATED BY ',' 
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS;
-
-ALTER TABLE `movies` ADD `imdbId` INT NOT NULL AFTER `rating`;
-ALTER TABLE `movies` ADD `tmdbId` INT NOT NULL AFTER `imdbId`;
-
-UPDATE movies AS m JOIN
-       (SELECT *  FROM links) AS l
-	ON m.movieId = l.movieId
-SET m.imdbId = l.imdbId;
-
-UPDATE movies AS m JOIN
-       (SELECT *  FROM links) AS l
-	ON m.movieId = l.movieId
-SET m.tmdbId = l.tmdbId;
-
-DROP table links;
+INSERT INTO db_recomm.users SELECT * from db_user.user;
 
 
-UPDATE movies SET rating = ROUND(rating, 2) * 10;
-ALTER TABLE `movies` CHANGE `rating` `rating` DECIMAL(2,1) NOT NULL;
-
--------
-
-CREATE TABLE ratings (
-	rId	INT		NOT NULL	AUTO_INCREMENT,
-    	username	VARCHAR(255)	 	NOT NULL,
-	movieId INT 		NOT NULL,
-    	rating	BOOL,
-	PRIMARY KEY (rId),
-	FOREIGN KEY (username) REFERENCES user(username), 
-    	FOREIGN KEY (movieId) REFERENCES db_recomm.movies(movieId)
-);
-
-
-INSERT INTO db_recomm.users SELECT * from db_user.users,
-
-
-
-LOAD DATA LOCAL INFILE '/Applications/MAMP/htdocs/output.csv' INTO TABLE movies 
-FIELDS TERMINATED BY ';'
-OPTIONALLY ENCLOSED BY '"'
-LINES TERMINATED BY '\n'
-IGNORE 1 ROWS;
 

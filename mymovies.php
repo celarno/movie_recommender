@@ -2,6 +2,12 @@
 session_start();
 require('connect.php');
 require('api_keys.php');
+require('user_picture.php');
+
+if (!isset($_SESSION['username'])){
+    header('Location: index.php');
+}
+
 ?>
 <!DOCTYPE html>
 <html>
@@ -44,9 +50,12 @@ require('api_keys.php');
                 <li class="nav-item">
                     <a class="nav-link" href="browse.php">Browse Movies</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="admin/admin_movies.php">Admin</a>
+                </li>
             </ul>
             <ul class="navbar-nav ml-auto">
-                <li class="nav-item"><span class="nav-link"><i class="fas fa-user-circle"></i> Welcome, <?php echo $username?></span></li>
+                <li class="nav-item"><span class="nav-link"><img class="profile_pic" style="height:20px;width:20px;box-shadow:none;" src="<?php echo $p ?>">  Welcome, <?php echo $username?></span></li>
                 <li class="nav-item"><a class="nav-link" href='logout.php'><i class="fas fa-external-link-alt"></i> Logout</button></a></li>
             </ul>
         </div>
@@ -60,11 +69,12 @@ require('api_keys.php');
             <a id="adding" href="#" style="display: none"><i class="fas fa-plus-circle"></i> add to favorites</a>
         </div>
         <div id="favmovies_new" style="display: none;"><h3>New Favorites</h3></div>
-        <button id="save" style="display: none;"><i class="fas fa-save"></i> save to favorites</button>
+        <button id="save" style="display: none;"><i class="fas fa-save"></i> add to favorites</button>
         <p id="results" style="margin-top:1em;color: #9d1206"></p>
         <h3>Current Favorites</h3>
             <div id="favmovies">
-                <table id="movieTable" class="table table-hover table-sm table-responsive-lg">
+                <br>
+                <table id="movieTable" class="table table-sm table-responsive-lg">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -72,7 +82,7 @@ require('api_keys.php');
                         <th>Year</th>
                         <th>Genres</th>
                         <th>Rating</th>
-                        <th>Favorite</th>
+                        <th></th>
                     </tr>
                     </thead>
                     <tbody>
@@ -87,18 +97,26 @@ require('api_keys.php');
 
         //$("#favmovies").html('loading favorites ...');
         var table = $('#movieTable').DataTable({
+            responsive: true,
+            columnDefs: [
+                { "visible": false, "targets": 0 }
+            ],
             processing: true,
             serverSide: true,
-            ajax: "fav_table.php"
+            ajax: "fav_table.php",
+            fnDrawCallback: function( oSettings ) {
+                $('#movieTable tbody tr').hover( function() {
+                    $(this).find("img").css("filter","none");
+                }, function () {
+                    $(this).find("img").css("filter","grayscale(80%)");
+                });
+            }
+
         });
 
         $('#movieTable tbody').on('click', 'tr', function () {
             var data = table.row(this).data();
             window.location.href = "movie.php?id=" + data[0];
-        });
-
-        $('#movieTable tbody tr').hover(function () {
-            $(this).css("cursor","pointer");
         });
 
         var favs = [];

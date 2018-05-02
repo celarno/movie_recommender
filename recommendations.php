@@ -1,32 +1,39 @@
 <?php
 session_start();
+if (!isset($_SESSION['username'])){
+    header('Location: index.php');
+}
+
 require('console_log.php');
 require('connect.php');
 require('api_keys.php');
+require('user_picture.php');
 
+function getMovieID($tmdbId,$title,$vote,$year, $poster){
 
-function getMovieID($tmdbId,$title,$vote,$year){
-    // add movie if doesnt exists
+    require('connect.php');
+    $poster = iconv('ASCII', 'UTF-8//IGNORE', $poster);
 
+    // get movieID
     $sql = "SELECT movieId FROM movies WHERE tmdbId = ". $tmdbId;
     $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
     $result = $result["movieId"];
-    //console_log(strlen($result)===0);
 
-    if(strlen($result)===0){
-        // movie id's
-        $imdbId = 0;
-        $sql1 = "INSERT INTO movies (title, imdbId, tmdbId, rating, year)
-            VALUES ('". $title ."',". $imdbId .", ". $tmdbId .", ". $vote .", ". $year .")";
+    // if movie does not exists, add to db
+    if(strlen($result)==0){
+        $sql1 = 'INSERT INTO movies (title, tmdbId, rating, year, poster)
+            VALUES ("'. $title .'", '. $tmdbId .', '. $vote .', '. $year .', "'. $poster. '")';
+
         if ($connection->query($sql1) === TRUE) {
             $sql = "SELECT movieId FROM movies WHERE tmdbId = ". $tmdbId;
             $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
             $result = $result["movieId"];
         } else {
-            $result = "error!";
-            console_log(json_encode($sql1));
+            $result = "";
+            console_log($result);
         }
     } else {
+        // update rating
         $sql_rating = "UPDATE movies SET rating=".$vote.", WHERE movieId=".$result;
         $connection->query($sql_rating);
     }
@@ -36,7 +43,7 @@ function getMovieID($tmdbId,$title,$vote,$year){
 }
 
 function check($id){
-    $username = $_SESSION['username'];
+    require('connect.php');
     $sql = "SELECT count(m.tmdbId) as n
             FROM movies as m, ratings as r 
             WHERE m.movieId = r.movieId
@@ -58,7 +65,6 @@ for ($x = 1; $x <= 3; $x++) {
         ORDER BY RAND() LIMIT 1";
     $result = mysqli_fetch_assoc(mysqli_query($connection, $sql));
     $movieId = trim($result["tmdbId"]);
-    mysqli_close($connection);
 
     if($movieId!=NULL){
         $url = "https://api.themoviedb.org/3/movie/". $movieId ."/recommendations?page=1&language=en-US&api_key=".$api_key;
@@ -82,6 +88,7 @@ for ($x = 1; $x <= 3; $x++) {
     }
 }
 
+mysqli_close($connection);
 
 // cleaning up the array (merging and removing duplicates)
 $test[] = array_merge($data[1],$data[2],$data[3]);
@@ -134,9 +141,12 @@ $recomm = array_intersect_key($recomm, $tempArr);
                     <li class="nav-item">
                         <a class="nav-link" href="browse.php">Browse Movies</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="admin/admin_movies.php">Admin</a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ml-auto">
-                    <li class="nav-item"><span class="nav-link"><i class="fas fa-user-circle"></i> Welcome, <?php echo $username?></span></li>
+                    <li class="nav-item"><span class="nav-link"><img class="profile_pic" style="height:20px;width:20px;box-shadow:none;" src="<?php echo $p ?>"> Welcome, <?php echo $username?></span></li>
                     <li class="nav-item"><a class="nav-link" href='logout.php'><i class="fas fa-external-link-alt"></i> Logout</button></a></li>
                 </ul>
             </div>
@@ -149,22 +159,26 @@ $recomm = array_intersect_key($recomm, $tempArr);
                 if ($err) {
                     console_log("cURL Error #:" . $err);
                 } else {
-                    //console_log($recomm);
+                    if(sizeof($recomm)>0){
+                        foreach($recomm as $entry){
+                            $tmdbId = (int)($entry->id);
+                            if(check($tmdbId) == 0){
+                                $year = $entry->release_date;
+                                $year = (int)substr($year,0,4);
+                                $poster = "http://image.tmdb.org/t/p/w200/". $entry->poster_path;
+                                $vote = $entry->vote_average;
+                                $title = $entry->original_title;
 
-                    foreach($recomm as $entry){
-                        $id = (int)($entry->id);
-                        if(check($id) === 0){
-                            $year = $entry->release_date;
-                            $year = (int)substr($year,0,4);
-                            $poster = "http://image.tmdb.org/t/p/w200/". $entry->poster_path;
-                            $vote = $entry->vote_average;
-                            $title = $entry->original_title;
+                                echo '<a href="movie.php?id='. getMovieID($tmdbId, $title, $vote, $year, $poster) .'"><img style="margin:1em;" src="'. $poster .'"></a>';
 
-                            $t = getMovieID($id, $title, $vote, $year);
-                            //echo '<a href="movie.php?id='. getMovieID($id, $title, $vote, $year) .'"><img style="margin:1em;" src="'. $poster .'"></a>';
-                        
+                            }
                         }
+                    } else {
+                        console_log($recomm);
+                        echo "<BR><p>You need to pick some favorites first.</p>";
                     }
+
+
                 }
             ?>
     </div>
